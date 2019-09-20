@@ -5,7 +5,10 @@ This tutorial is about building you git source using `buildah` and deploying it 
 ## Prerequisites:
 1. OpenShift / Kubernetes cluster
 2. `oc` CLI binary, grab latest from [here](https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/)
-2. Tekton pipelines release v0.6.0 `oc apply -f https://github.com/tektoncd/pipeline/releases/download/v0.6.0/release.yaml`
+2. Tekton pipelines release v0.6.0
+```bash
+oc apply -f https://github.com/tektoncd/pipeline/releases/download/v0.6.0/release.yaml
+```
 3. tkn CLI, [install](https://github.com/tektoncd/cli#installing-tkn)
 
 
