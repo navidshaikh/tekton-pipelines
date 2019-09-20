@@ -1,0 +1,19 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: build-kn-deploy-source
+spec:
+  type: git
+  params:
+    - name: url
+      value: "https://github.com/navidshaikh/go-helloworld-bin"
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: build-kn-deploy-image
+spec:
+  type: image
+  params:
+    - name: url
+      value: "docker.io/swordphilic/go-helloworld:buildah"

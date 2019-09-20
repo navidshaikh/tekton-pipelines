@@ -1,0 +1,42 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Pipeline
+metadata:
+  name: build-kn-deploy
+spec:
+  resources:
+  - name: source
+    type: git
+  - name: image
+    type: image
+  params:
+  - name: service
+    description: Knative service name
+  - name: force
+    description: Whether force creation of service
+  tasks:
+  - name: buildah-build
+    taskRef:
+      name: buildah
+    resources:
+      inputs:
+      - name: source
+        resource: source
+      outputs:
+      - name: image
+        resource: image
+  - name: kn-deploy
+    taskRef:
+      name: kn-create
+    runAfter:
+      - buildah-build
+    resources:
+      inputs:
+      - name: image
+        resource: image
+        from:
+          - buildah-build
+    params:
+    - name: service
+      value: "$(params.service)"
+    - name: force
+      value: "$(params.force)"
