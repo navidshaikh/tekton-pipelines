@@ -25,12 +25,12 @@ We'll also configure a service account with
 
 ## One time setup:
 1. Lets create a sample project `tkn-kn`, we'll reference this project/namespace in our upcoming operations.
-```
+```bash
 oc new-project tkn-kn
 ```
 
 2. Create docker-regitry secrets for pushing built images to your registry
-```
+```bash
 oc create secret docker-registry dockerreg --docker-server=docker.io --docker-username=<USERNAME> --docker-password=<PASSWORD> --docker-email=<EMAIL>
 ```
 
@@ -82,12 +82,12 @@ roleRef:
 
 Apply the config we created
 
-```
+```bash
 oc apply -f kn-deployer.yaml
 ```
 
 4. To be able to build containers using buildah, we'll need to add privileged security context and `edit` role to our service account
-```
+```bash
 oc adm policy add-scc-to-user privileged -z kn-deployer-account
 oc adm policy add-role-to-user edit -z kn-deployer-account
 ```
@@ -102,12 +102,12 @@ Lets create the actual pipeline now, we'll proceed as
 5. Create a pipeline run to trigger the pipeline
 
 1. Install buildah task
-```
+```bash
 oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/master/buildah/buildah.yaml
 ```
 
 2. Install the kn-create task
-```
+```bash
 oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/master/kn/kn-create.yaml
 ```
 3. Create a pipeline for build and deploy
@@ -161,7 +161,7 @@ spec:
 ```
 
 Create the pipeline
-```
+```bash
 oc apply -f build-kn-deploy.yaml
 ```
 
@@ -172,7 +172,7 @@ to make available during pipeline run
 Save following YAML in for e.g. `resources.yaml` and update values for your Git repo and container repository to
 push built image to.
 
-```
+```yaml
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
@@ -195,7 +195,7 @@ spec:
 ```
 
 Create the resources
-```
+```bash
 oc apply -f resources.yaml
 ```
 
@@ -203,7 +203,7 @@ oc apply -f resources.yaml
 to run our pipeline
 
 Save following YAML in for e.g. `pipeline-run.yaml` and update parameters value if required.
-```
+```yaml
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineRun
 metadata:
@@ -227,17 +227,17 @@ spec:
 ```
 
 Create the pipelien run
-```
+```bash
 oc apply -f pipeline-run.yaml
 ```
 
 Lets monitor the logs of our pipeline run using `tkn`
-```
+```bash
 tkn pr list
 tkn pr logs <pipelinerun-name> logs -f
 ```
 
 After the successful run of the pipeline, we should have the Knative Service created
-```
+```bash
 oc get ksvc
 ```
