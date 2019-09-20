@@ -98,11 +98,11 @@ oc adm policy add-role-to-user edit -z kn-deployer-account
 ## Pipline:
 
 Lets create the actual pipeline now, we'll proceed as
-1. Install buildah task
-2. Install kn-create task
-3. Create a pipeline for build and kn deploy
-4. Create pipeline resources to input to our pipeline
-5. Create a pipeline run to trigger the pipeline
+- Install buildah task
+- Install kn-create task
+- Create a pipeline for build and kn deploy
+- Create pipeline resources to input to our pipeline
+- Create a pipeline run to trigger the pipeline
 
 1. Install buildah task
 ```bash
