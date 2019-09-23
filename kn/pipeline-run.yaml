@@ -6,11 +6,6 @@ spec:
   serviceAccount: kn-deployer-account
   pipelineRef:
     name: build-kn-deploy
-  params:
-    - name: service
-      value: "svc"
-    - name: force
-      value: "true"
   resources:
     - name: source
       resourceRef:
@@ -18,3 +13,12 @@ spec:
     - name: image
       resourceRef:
         name: build-kn-deploy-image
+  params:
+    - name: ARGS
+      value:
+        - "service"
+        - "create"
+        - "hello"
+        - "--force"
+        - "--image=$(inputs.resources.image.url)"
+        - "--env=TARGET=Tekton"

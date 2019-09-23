@@ -16,4 +16,4 @@ spec:
   type: image
   params:
     - name: url
-      value: "docker.io/swordphilic/go-helloworld:buildah"
+      value: "docker.io/swordphilic/go-helloworld:tkn"

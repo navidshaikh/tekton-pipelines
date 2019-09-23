@@ -9,24 +9,25 @@ spec:
   - name: image
     type: image
   params:
-  - name: service
-    description: Knative service name
-  - name: force
-    description: Whether force creation of service
+  - name: ARGS
+    type: array
+    description: Arguments to pass to kn CLI
+    default:
+      - "help"
   tasks:
   - name: buildah-build
     taskRef:
       name: buildah
     resources:
       inputs:
-      - name: source
-        resource: source
+        - name: source
+          resource: source
       outputs:
-      - name: image
-        resource: image
+        - name: image
+          resource: image
   - name: kn-deploy
     taskRef:
-      name: kn-create
+      name: kn
     runAfter:
       - buildah-build
     resources:
@@ -36,7 +37,6 @@ spec:
         from:
           - buildah-build
     params:
-    - name: service
-      value: "$(params.service)"
-    - name: force
-      value: "$(params.force)"
+    - name: ARGS
+      value:
+        - "$(params.ARGS)"
