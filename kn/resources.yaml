@@ -6,7 +6,7 @@ spec:
   type: git
   params:
     - name: url
-      value: "https://github.com/navidshaikh/go-helloworld-bin"
+      value: "https://github.com/navidshaikh/go-helloworld"
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
