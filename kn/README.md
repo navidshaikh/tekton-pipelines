@@ -5,9 +5,9 @@ This tutorial is about building you git source using `buildah` and deploying it 
 ## Prerequisites:
 1. OpenShift / Kubernetes cluster
 2. `oc` CLI binary, grab latest from [here](https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/)
-2. Tekton pipelines release v0.6.0
+2. Tekton pipelines release v0.7.0
 ```bash
-oc apply -f https://github.com/tektoncd/pipeline/releases/download/v0.6.0/release.yaml
+oc apply -f https://github.com/tektoncd/pipeline/releases/download/v0.7.0/release.yaml
 ```
 3. tkn CLI, [install](https://github.com/tektoncd/cli#installing-tkn)
 
@@ -99,19 +99,19 @@ oc adm policy add-role-to-user edit -z kn-deployer-account
 
 Lets create the actual pipeline now, we'll proceed as
 - Install buildah task
-- Install kn-create task
+- Install kn task
 - Create a pipeline for build and kn deploy
 - Create pipeline resources to input to our pipeline
 - Create a pipeline run to trigger the pipeline
 
-1. Install buildah task
+1. Install buildah task from catalog
 ```bash
 oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/master/buildah/buildah.yaml
 ```
 
-2. Install the kn-create task
+2. Install the kn task from catalog
 ```bash
-oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/master/kn/kn-create.yaml
+oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/master/kn/kn.yaml
 ```
 3. Create a pipeline for build and deploy
 We'll use above installed tasks in our pipeline as steps for our pipeline
@@ -130,24 +130,25 @@ spec:
   - name: image
     type: image
   params:
-  - name: service
-    description: Knative service name
-  - name: force
-    description: Whether force creation of service to overwrite existing one with same name
+  - name: ARGS
+    type: array
+    description: Arguments to pass to kn CLI
+    default:
+      - "help"
   tasks:
   - name: buildah-build
     taskRef:
       name: buildah
     resources:
       inputs:
-      - name: source
-        resource: source
+        - name: source
+          resource: source
       outputs:
-      - name: image
-        resource: image
+        - name: image
+          resource: image
   - name: kn-deploy
     taskRef:
-      name: kn-create
+      name: kn
     runAfter:
       - buildah-build
     resources:
@@ -157,10 +158,9 @@ spec:
         from:
           - buildah-build
     params:
-    - name: service
-      value: "$(params.service)"
-    - name: force
-      value: "$(params.force)"
+    - name: ARGS
+      value:
+        - "$(params.ARGS)"
 ```
 
 Create the pipeline
@@ -194,7 +194,7 @@ spec:
   type: image
   params:
     - name: url
-      value: "docker.io/swordphilic/go-helloworld:buildah"
+      value: "docker.io/swordphilic/go-helloworld:tkn"
 ```
 
 Create the resources
@@ -215,11 +215,6 @@ spec:
   serviceAccount: kn-deployer-account
   pipelineRef:
     name: build-kn-deploy
-  params:
-    - name: service
-      value: "svc"
-    - name: force
-      value: "true"
   resources:
     - name: source
       resourceRef:
@@ -227,6 +222,15 @@ spec:
     - name: image
       resourceRef:
         name: build-kn-deploy-image
+  params:
+    - name: ARGS
+      value:
+        - "service"
+        - "create"
+        - "hello"
+        - "--force"
+        - "--image=$(inputs.resources.image.url)"
+        - "--env=TARGET=Tekton"
 ```
 
 Create the pipelien run
