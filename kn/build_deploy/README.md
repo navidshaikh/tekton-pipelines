@@ -57,6 +57,8 @@ spec:
         from:
           - buildah-build
     params:
+    - name: kn-image
+      value: "gcr.io/knative-nightly/knative.dev/client/cmd/kn"
     - name: ARGS
       value:
         - "$(params.ARGS)"
@@ -65,7 +67,7 @@ spec:
 Save the above YAML in for e.g. `build_deploy_pipeline.yaml` and update
 names if required or you can use above pipeline as is using
 ```
-oc create -f
+oc create -f https://raw.githubusercontent.com/navidshaikh/tekton-pipelines/master/kn/build_deploy/build_deploy_pipeline.yaml
 ```
 
 ## PipelineResource

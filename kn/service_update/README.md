@@ -38,10 +38,10 @@ spec:
 ```
 
 Save the above YAML in for e.g. `kn_service_update_pipeline.yaml` and
-update if requred or you can create above pipeline as is using
+update if required or you can create above pipeline as is using
 
 ```
-oc create -f
+oc create -f https://raw.githubusercontent.com/navidshaikh/tekton-pipelines/master/kn/service_update/kn_service_update_pipeline.yaml
 ```
 
 ## PipelineResource
