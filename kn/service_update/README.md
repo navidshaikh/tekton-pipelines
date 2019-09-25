@@ -30,6 +30,8 @@ spec:
       - name: image
         resource: image
     params:
+    - name: kn-image
+      value: "gcr.io/knative-nightly/knative.dev/client/cmd/kn"
     - name: ARGS
       value:
         - "$(params.ARGS)"
