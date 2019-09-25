@@ -99,19 +99,19 @@ oc adm policy add-role-to-user edit -z kn-deployer-account
 
 Lets create the actual pipeline now, we'll proceed as
 - Install buildah task
-- Install kn-create task
+- Install kn task
 - Create a pipeline for build and kn deploy
 - Create pipeline resources to input to our pipeline
 - Create a pipeline run to trigger the pipeline
 
-1. Install buildah task (one present in this git repo `buildah.yaml`)
+1. Install buildah task from catalog
 ```bash
-oc apply -f https://raw.githubusercontent.com/navidshaikh/tekton-pipelines/new-kn-task/kn/buildah.yaml
+oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/master/buildah/buildah.yaml
 ```
 
-2. Install the kn task (one present in this git repo `kn.yaml`)
+2. Install the kn task from catalog
 ```bash
-oc apply -f https://raw.githubusercontent.com/navidshaikh/tekton-pipelines/new-kn-task/kn/kn.yaml
+oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/master/kn/kn.yaml
 ```
 3. Create a pipeline for build and deploy
 We'll use above installed tasks in our pipeline as steps for our pipeline
