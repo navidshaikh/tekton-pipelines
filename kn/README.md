@@ -1,6 +1,7 @@
 # Git source to Knative Service
 
-This tutorial is about building you git source using `buildah` and deploying it as Knative service using `kn`.
+This tutorial is about building you git source using `buildah` and deploying it as Knative service using `kn`,
+performing Knative service updates, traffic splitting etc.
 
 ## Prerequisites:
 1. OpenShift / Kubernetes cluster
@@ -42,7 +43,7 @@ oc create secret docker-registry dockerreg --docker-server=docker.io --docker-us
  - create cluster role `kn-deployer` to access to Knative resources
  - binds the service account with cluster role `kn-deployer` in namespace `tkn-kn`
 
-Save following YAML in for e.g. `kn-deployer.yaml` and update names if required.
+Save following YAML in for e.g. `kn_deployer.yaml` and update if required.
 
 ```yaml
 # Define a ServiceAccount named kn-deployer-account that has permission to
@@ -86,7 +87,7 @@ roleRef:
 Apply the config we created
 
 ```bash
-oc apply -f kn-deployer.yaml
+oc apply -f kn_deployer.yaml
 ```
 
 4. To be able to build containers using buildah, we'll need to add privileged security context and `edit` role to our service account
@@ -95,156 +96,17 @@ oc adm policy add-scc-to-user privileged -z kn-deployer-account
 oc adm policy add-role-to-user edit -z kn-deployer-account
 ```
 
-## Pipline:
-
-Lets create the actual pipeline now, we'll proceed as
-- Install buildah task
-- Install kn task
-- Create a pipeline for build and kn deploy
-- Create pipeline resources to input to our pipeline
-- Create a pipeline run to trigger the pipeline
-
-1. Install buildah task from catalog
+5. Install buildah task from catalog
 ```bash
 oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/master/buildah/buildah.yaml
 ```
 
-2. Install the kn task from catalog
+6. Install the kn task from catalog
 ```bash
 oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/master/kn/kn.yaml
 ```
-3. Create a pipeline for build and deploy
-We'll use above installed tasks in our pipeline as steps for our pipeline
 
-Save following YAML in for e.g. `build-kn-deploy.yaml` and update names if required.
-
-```yaml
-apiVersion: tekton.dev/v1alpha1
-kind: Pipeline
-metadata:
-  name: build-kn-deploy
-spec:
-  resources:
-  - name: source
-    type: git
-  - name: image
-    type: image
-  params:
-  - name: ARGS
-    type: array
-    description: Arguments to pass to kn CLI
-    default:
-      - "help"
-  tasks:
-  - name: buildah-build
-    taskRef:
-      name: buildah
-    resources:
-      inputs:
-        - name: source
-          resource: source
-      outputs:
-        - name: image
-          resource: image
-  - name: kn-deploy
-    taskRef:
-      name: kn
-    runAfter:
-      - buildah-build
-    resources:
-      inputs:
-      - name: image
-        resource: image
-        from:
-          - buildah-build
-    params:
-    - name: ARGS
-      value:
-        - "$(params.ARGS)"
-```
-
-Create the pipeline
-```bash
-oc apply -f build-kn-deploy.yaml
-```
-
-4. Create pipeline resource to input to our pipeline
-As we see above, there are a couple of resources referenced in pipeline, we'll need to create these resources
-to make available during pipeline run
-
-Save following YAML in for e.g. `resources.yaml` and update values for your Git repo and container repository to
-push built image to.
-
-```yaml
-apiVersion: tekton.dev/v1alpha1
-kind: PipelineResource
-metadata:
-  name: build-kn-deploy-source
-spec:
-  type: git
-  params:
-    - name: url
-      value: "https://github.com/navidshaikh/go-helloworld"
----
-apiVersion: tekton.dev/v1alpha1
-kind: PipelineResource
-metadata:
-  name: build-kn-deploy-image
-spec:
-  type: image
-  params:
-    - name: url
-      value: "docker.io/swordphilic/go-helloworld:tkn"
-```
-
-Create the resources
-```bash
-oc apply -f resources.yaml
-```
-
-5. Create the pipeline run to trigger our pipeline, pipeline run mentions the parameters required
-to run our pipeline
-
-Save following YAML in for e.g. `pipeline-run.yaml` and update parameters value if required.
-```yaml
-apiVersion: tekton.dev/v1alpha1
-kind: PipelineRun
-metadata:
-  generateName: build-kn-deploy-
-spec:
-  serviceAccount: kn-deployer-account
-  pipelineRef:
-    name: build-kn-deploy
-  resources:
-    - name: source
-      resourceRef:
-        name: build-kn-deploy-source
-    - name: image
-      resourceRef:
-        name: build-kn-deploy-image
-  params:
-    - name: ARGS
-      value:
-        - "service"
-        - "create"
-        - "hello"
-        - "--force"
-        - "--image=$(inputs.resources.image.url)"
-        - "--env=TARGET=Tekton"
-```
-
-Create the pipelien run
-```bash
-oc apply -f pipeline-run.yaml
-```
-
-Lets monitor the logs of our pipeline run using `tkn`
-```bash
-tkn pr list
-tkn pr logs <pipelinerun-name> logs -f
-```
-
-After the successful run of the pipeline, we should have the Knative Service created
-```bash
-oc get ksvc
-```
+## Piplines:
+1. Create image from git source and create Knative Service using built container [pipeline](./build_deploy/README.md)
+2. Deploy new revision to your Knative Service [pipeline](./service_update/README.md)
+3. Perform traffic splitting operations on your Knative Service [pipeline](./traffic_splitting/README.md)

@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
-  name: build-kn-deploy-source
+  name: buildah-build-kn-create-source
 spec:
   type: git
   params:
@@ -11,7 +11,7 @@ spec:
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
-  name: build-kn-deploy-image
+  name: buildah-build-kn-create-image
 spec:
   type: image
   params:

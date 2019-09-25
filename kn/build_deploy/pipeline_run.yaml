@@ -1,18 +1,18 @@
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineRun
 metadata:
-  generateName: build-kn-deploy-
+  generateName: buildah-build-kn-create-
 spec:
   serviceAccount: kn-deployer-account
   pipelineRef:
-    name: build-kn-deploy
+    name: buildah-build-kn-create
   resources:
     - name: source
       resourceRef:
-        name: build-kn-deploy-source
+        name: buildah-build-kn-create-source
     - name: image
       resourceRef:
-        name: build-kn-deploy-image
+        name: buildah-build-kn-create-image
   params:
     - name: ARGS
       value:
