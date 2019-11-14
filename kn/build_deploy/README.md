@@ -108,7 +108,9 @@ oc apply -f resources.yaml
 ```
 
 3. Create the pipeline run to trigger our pipeline, pipeline run references the pipline resouces created above and
-mentions the parameters required to run our pipeline and perform the task
+mentions the parameters required to run our pipeline and perform the task.
+Also note that we referenced the service account `kn-deployer-account` while creating the service via kn task,
+this is to be able to pull the container image from private repo via `imagePullSecrets` linked to mentioned service account.
 
 ```yaml
 apiVersion: tekton.dev/v1alpha1
@@ -135,6 +137,7 @@ spec:
         - "--force"
         - "--image=$(inputs.resources.image.url)"
         - "--env=TARGET=Tekton"
+        - "--service-account=kn-deployer-account"
 ```
 
 Save the above YAML in for e.g. `pipeline_run.yaml` and update parameters value if required and
