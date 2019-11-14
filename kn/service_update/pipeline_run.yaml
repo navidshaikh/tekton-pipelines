@@ -19,3 +19,4 @@ spec:
         - "--revision-name=hello-v2"
         - "--image=$(inputs.resources.image.url)"
         - "--env=TARGET=v2"
+        - "--service-account=kn-deployer-account"

@@ -6,25 +6,26 @@ performing Knative service updates, traffic splitting etc.
 ## Prerequisites:
 1. OpenShift / Kubernetes cluster
 2. `oc` CLI binary, grab latest from [here](https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/)
-2. Tekton pipelines release v0.7.0
+3. Tekton pipelines release v0.8.0
 ```bash
-oc apply -f https://github.com/tektoncd/pipeline/releases/download/v0.7.0/release.yaml
+oc apply -f https://github.com/tektoncd/pipeline/releases/download/v0.8.0/release.yaml
 ```
-3. tkn CLI, [install](https://github.com/tektoncd/cli#installing-tkn)
-
+4. tkn CLI, [install](https://github.com/tektoncd/cli#installing-tkn)
+5. User account exists at a container registry for example: [quay.io](https://quay.io) or [docker.io](https://hub.docker.com/)
 
 ## Operations:
 
-We'll create a tekton pipeline which performs following operations.
+We'll create a tekton pipeline which performs following operations:
 
 1. Create a container image from your git source
-2. Push the container image to a configured docker registry
+2. Push the container image to a configured container registry
 3. Create a Knative Service from container created
 
 We'll also configure a service account with
 1. Privileged security context for buildah task to build container images
 2. ClusterRole for CRUD operations on Knative resources
-3. Linked docker registry secrets to be able to push images to registry
+3. Linked container registry `secrets` to be able to push images to registry
+4. Linked `imagePullSecrets` to pull images to from registry
 
 
 ## One time setup:
@@ -33,13 +34,19 @@ We'll also configure a service account with
 oc new-project tkn-kn
 ```
 
-2. Create docker-regitry secrets for pushing built images to your registry
+2. Create `docker-regitry` secrets for pushing built images to registry for example: quay.io or docker.io
 ```bash
-oc create secret docker-registry dockerreg --docker-server=docker.io --docker-username=<USERNAME> --docker-password=<PASSWORD> --docker-email=<EMAIL>
+oc create secret docker-registry container-registry --docker-server=<DOCKER-REGISTRY> --docker-username=<USERNAME> --docker-password=<PASSWORD> --docker-email=<EMAIL>
 ```
 
-3. Create Service Account kn-deployer-account and
- - link `dockerreg` secrets created above in step 2
+**Note:**
+- If you are using `docker.io`: Push to (a new private repo at) `docker.io` via buildah and pull via `imagePullSecrets` **does not** work!
+  Please [create a new](https://hub.docker.com/repository/create) empty **public** repository for this tutorial and refer it in subsequent steps.
+- If you are using `quay.io`: Push to (a private repo at) `quay.io` via buildah and pull via `imagePullSecrets` **works well**. [Get](https://quay.io/signin/) your account created at quay.
+
+
+3. Create Service Account `kn-deployer-account` and
+ - link `container-registry` secret created above in step 2
  - create cluster role `kn-deployer` to access to Knative resources
  - binds the service account with cluster role `kn-deployer` in namespace `tkn-kn`
 
@@ -53,10 +60,12 @@ kind: ServiceAccount
 metadata:
   name: kn-deployer-account
   namespace: tkn-kn
-# Link your docker registry secrets
+# Link your container registry secrets
 secrets:
-  - name: dockerreg
-
+  - name: container-registry
+# To be able to pull the (private) image from the container registry
+imagePullSecrets:
+  - name: container-registry
 ---
 
 kind: ClusterRole

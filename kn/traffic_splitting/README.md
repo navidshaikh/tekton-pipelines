@@ -64,7 +64,7 @@ spec:
 Save the above YAML in for e.g. `pipeline_run.yaml` and create it
 
 ```bash
-oc apply -f pipeline_run.yaml
+oc create -f pipeline_run.yaml
 ```
 
 Lets monitor the logs of our pipeline run using `tkn`

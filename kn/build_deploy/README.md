@@ -12,7 +12,7 @@ deploy the built container to a Knative Service. In this guide, we'll create
 We'll create a tekton pipeline which performs following operations:
 
 1. Create a container image from your git source having a Dockerfile
-2. Push the container image to a configured docker registry
+2. Push the container image to a configured registry
 3. Create a Knative Service from built container
 
 Lets create a pipeline for git source build and service creation
@@ -76,7 +76,7 @@ Let's create pipeline resource to input to our pipeline.
 As we see above, there are a couple of resources referenced in pipeline,
 we'll need to create these resources to make available during pipeline run.
 Make sure your git repository has a Dockerfile at root of the repo.
-Make sure the docker repository URL is correct and you have push access to.
+Make sure the container repository URL is correct and you have push access to.
 
 ```yaml
 apiVersion: tekton.dev/v1alpha1
@@ -97,18 +97,20 @@ spec:
   type: image
   params:
     - name: url
-      value: "docker.io/swordphilic/go-helloworld:tkn"
+      value: "quay.io/navidshaikh/go-helloworld:tkn"
 ```
 
 Save the above YAML in for e.g. `resources.yaml` and update values for your git repo and container repository to
 push built image to and create the resources
 
 ```bash
-oc apply -f resources.yaml
+oc create -f resources.yaml
 ```
 
 3. Create the pipeline run to trigger our pipeline, pipeline run references the pipline resouces created above and
-mentions the parameters required to run our pipeline and perform the task
+mentions the parameters required to run our pipeline and perform the task.
+Also note that we referenced the service account `kn-deployer-account` while creating the service via kn task,
+this is to be able to pull the container image from private repo via `imagePullSecrets` linked to mentioned service account.
 
 ```yaml
 apiVersion: tekton.dev/v1alpha1
@@ -132,16 +134,17 @@ spec:
         - "service"
         - "create"
         - "hello"
-        - "--force"
+        - "--revision-name=hello-v1"
         - "--image=$(inputs.resources.image.url)"
         - "--env=TARGET=Tekton"
+        - "--service-account=kn-deployer-account"
 ```
 
 Save the above YAML in for e.g. `pipeline_run.yaml` and update parameters value if required and
 create the pipelien run
 
 ```bash
-oc apply -f pipeline_run.yaml
+oc create -f pipeline_run.yaml
 ```
 
 Lets monitor the logs of our pipeline run using `tkn`

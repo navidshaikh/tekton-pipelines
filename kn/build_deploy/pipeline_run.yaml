@@ -19,7 +19,7 @@ spec:
         - "service"
         - "create"
         - "hello"
-        - "--force"
         - "--revision-name=hello-v1"
         - "--image=$(inputs.resources.image.url)"
         - "--env=TARGET=Tekton"
+        - "--service-account=kn-deployer-account"
