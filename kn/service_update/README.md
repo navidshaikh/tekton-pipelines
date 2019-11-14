@@ -65,7 +65,7 @@ Save the above YAML in for e.g. `resources.yaml` and update values for
 image URL if required and create the resource
 
 ```bash
-oc apply -f resources.yaml
+oc create -f resources.yaml
 ```
 
 3. Create the pipeline run to trigger our pipeline and input the kn CLI
@@ -93,12 +93,13 @@ spec:
         - "--revision-name=hello-v2"
         - "--image=$(inputs.resources.image.url)"
         - "--env=TARGET=v2"
+        - "--service-account=kn-deployer-account"
 ```
 
 Save the above YAML in for e.g. `pipeline_run.yaml` and create it
 
 ```bash
-oc apply -f pipeline_run.yaml
+oc create -f pipeline_run.yaml
 ```
 
 Lets monitor the logs of our pipeline run using `tkn`

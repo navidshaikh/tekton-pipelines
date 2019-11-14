@@ -1,0 +1,25 @@
+apiVersion: tekton.dev/v1alpha1
+kind: TaskRun
+metadata:
+  generateName: kn-update-
+spec:
+  serviceAccount: kn-deployer-account  # <-- run as the authorized SA
+  taskRef:
+    name: kn
+  inputs:
+    resources:
+    - name: image
+      resourceSpec:
+        type: image
+        params:
+        - name: url
+          value: gcr.io/knative-nightly/knative.dev/client/cmd/kn
+    params:
+    - name: ARGS
+      value:
+      - "service"
+      - "create"
+      - "--force"
+      - "hello"
+      - "--image=gcr.io/knative-samples/helloworld-go"
+      - "--env=TARGET=Tekton"
