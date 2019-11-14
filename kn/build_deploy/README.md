@@ -104,7 +104,7 @@ Save the above YAML in for e.g. `resources.yaml` and update values for your git 
 push built image to and create the resources
 
 ```bash
-oc apply -f resources.yaml
+oc create -f resources.yaml
 ```
 
 3. Create the pipeline run to trigger our pipeline, pipeline run references the pipline resouces created above and
@@ -134,7 +134,7 @@ spec:
         - "service"
         - "create"
         - "hello"
-        - "--force"
+        - "--revision-name=hello-v1"
         - "--image=$(inputs.resources.image.url)"
         - "--env=TARGET=Tekton"
         - "--service-account=kn-deployer-account"
@@ -144,7 +144,7 @@ Save the above YAML in for e.g. `pipeline_run.yaml` and update parameters value 
 create the pipelien run
 
 ```bash
-oc apply -f pipeline_run.yaml
+oc create -f pipeline_run.yaml
 ```
 
 Lets monitor the logs of our pipeline run using `tkn`
