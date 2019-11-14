@@ -7,9 +7,9 @@ metadata:
   namespace: tkn-kn
 # Link your docker registry secrets
 secrets:
-  - name: container-reg
+  - name: container-registry
 imagePullSecrets:
-  - name: container-reg
+  - name: container-registry
 ---
 
 kind: ClusterRole
