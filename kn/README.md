@@ -39,7 +39,7 @@ oc new-project tkn-kn
 oc create secret docker-registry container-registry --docker-server=<DOCKER-REGISTRY> --docker-username=<USERNAME> --docker-password=<PASSWORD> --docker-email=<EMAIL>
 ```
 
-**Note:**
+### Note:
 - If you are using `docker.io`: Push to (a new private repo at) `docker.io` via buildah and pull via `imagePullSecrets` **does not** work!
   Please [create a new](https://hub.docker.com/repository/create) empty **public** repository for this tutorial and refer it in subsequent steps.
 - If you are using `quay.io`: Push to (a private repo at) `quay.io` via buildah and pull via `imagePullSecrets` **works well**. [Get](https://quay.io/signin/) your account created at quay.
