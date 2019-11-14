@@ -34,16 +34,15 @@ We'll also configure a service account with
 oc new-project tkn-kn
 ```
 
-2. Create `docker-regitry` secrets for pushing built images to registry
+2. Create `docker-regitry` secrets for pushing built images to registry for example: quay.io or docker.io
 ```bash
 oc create secret docker-registry container-registry --docker-server=<DOCKER-REGISTRY> --docker-username=<USERNAME> --docker-password=<PASSWORD> --docker-email=<EMAIL>
 ```
 
 **Note:**
-- Push to (a private repo at) `docker.io` via buildah and pull via
-  `imagePullSecrets` does not work well. Please [create a new](https://hub.docker.com/repository/create) empty
-  **public** repository where we will push the image.
-- Push to (a private repo at) `quay.io` via buildah and pull via `imagePullSecrets` works well. [Get](https://quay.io/signin/) your account created at quay.
+- If you are using `docker.io`: Push to (a new private repo at) `docker.io` via buildah and pull via `imagePullSecrets` **does not** work!
+  Please [create a new](https://hub.docker.com/repository/create) empty **public** repository for this tutorial and refer it in subsequent steps.
+- If you are using `quay.io`: Push to (a private repo at) `quay.io` via buildah and pull via `imagePullSecrets` **works well**. [Get](https://quay.io/signin/) your account created at quay.
 
 
 3. Create Service Account `kn-deployer-account` and
