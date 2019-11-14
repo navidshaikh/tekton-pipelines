@@ -59,12 +59,13 @@ spec:
         - "--tag=hellov-2=v2"
         - "--traffic=v1=90"
         - "--traffic=v2=10"
+        - "--service-account=kn-deployer-account"
 ```
 
 Save the above YAML in for e.g. `pipeline_run.yaml` and create it
 
 ```bash
-oc apply -f pipeline_run.yaml
+oc create -f pipeline_run.yaml
 ```
 
 Lets monitor the logs of our pipeline run using `tkn`

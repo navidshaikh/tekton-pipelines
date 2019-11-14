@@ -20,3 +20,4 @@ spec:
         - "--tag=hello-v2=v2"
         - "--traffic=v1=90"
         - "--traffic=v2=10"
+        - "--service-account=kn-deployer-account"
