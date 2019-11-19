@@ -87,7 +87,7 @@ spec:
   type: git
   params:
     - name: url
-      value: "https://github.com/navidshaikh/go-helloworld"
+      value: "https://github.com/navidshaikh/helloworld-go"
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
@@ -97,7 +97,7 @@ spec:
   type: image
   params:
     - name: url
-      value: "quay.io/navidshaikh/go-helloworld:tkn"
+      value: "quay.io/navidshaikh/helloworld-go"
 ```
 
 Save the above YAML in for e.g. `resources.yaml` and update values for your git repo and container repository to
