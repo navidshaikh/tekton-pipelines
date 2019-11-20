@@ -56,7 +56,7 @@ spec:
         - "update"
         - "hello"
         - "--tag=hello-v1=v1"
-        - "--tag=hellov-2=v2"
+        - "--tag=hello-v2=v2"
         - "--traffic=v1=90"
         - "--traffic=v2=10"
 ```
