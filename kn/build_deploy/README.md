@@ -60,7 +60,7 @@ spec:
 
  - You can also create this Pipeline using the YAML file present in this repo using
 ```
-kubectl create -f https://raw.githubusercontent.com/tektoncd/catalog/master/kn/knative-dockerfile-deploy/build_deploy/build_deploy_pipeline.yaml
+kubectl create -f https://raw.githubusercontent.com/navidshaikh/tekton-pipelines/master/kn/build_deploy/build_deploy_pipeline.yaml
 ```
 ## PipelineResource
 
@@ -137,7 +137,7 @@ spec:
 
  - You can also create this PipelineRun using the YAML file present in this repo using
 ```
-kubectl create -f https://raw.githubusercontent.com/tektoncd/catalog/master/kn/knative-dockerfile-deploy/build_deploy/pipeline_run.yaml
+kubectl create -f https://raw.githubusercontent.com/navidshaikh/tekton-pipelines/master/kn/build_deploy/pipeline_run.yaml
 ```
 
 - We can monitor the logs of this PipelineRun using `tkn` CLI

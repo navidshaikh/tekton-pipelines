@@ -38,9 +38,9 @@ spec:
         - "$(params.ARGS)"
 ```
 
- - You can also create this Pipeline using the YAML file present in this repo using 
+ - You can also create this Pipeline using the YAML file present in this repo using
 ```
-kubectl create -f https://raw.githubusercontent.com/tektoncd/catalog/master/kn/knative-dockerfile-deploy/service_update/kn_service_update_pipeline.yaml
+kubectl create -f https://raw.githubusercontent.com/navidshaikh/tekton-pipelines/master/kn/service_update/kn_service_update_pipeline.yaml
 ```
 
 ## PipelineResource
@@ -61,9 +61,9 @@ spec:
     - name: url
       value: "gcr.io/knative-samples/helloworld-go"
 ```
-- You can use this PipelineResource using the YAML file present in this repo using 
+- You can use this PipelineResource using the YAML file present in this repo using
 ```
-kubectl create -f https://raw.githubusercontent.com/tektoncd/catalog/master/kn/knative-dockerfile-deploy/service_update/resources.yaml
+kubectl create -f https://raw.githubusercontent.com/navidshaikh/tekton-pipelines/master/kn/service_update/resources.yaml
 ```
 
 ## PipelineRun
@@ -100,7 +100,7 @@ spec:
 
 - You can also create this PipelineRun using the YAML file present in this repo using
 ```
-kubectl create -f https://raw.githubusercontent.com/tektoncd/catalog/master/kn/knative-dockerfile-deploy/service_update/pipeline_run.yaml
+kubectl create -f https://raw.githubusercontent.com/navidshaikh/tekton-pipelines/master/kn/service_update/pipeline_run.yaml
 ```
 
 Let's monitor the logs of the Pipeline run using `tkn`
