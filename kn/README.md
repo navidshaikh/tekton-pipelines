@@ -1,56 +1,40 @@
-# Git source to Knative Service
+# Git Source with Dockerfile to Knative Service
 
-This tutorial is about building you git source using `buildah` and deploying it as Knative service using `kn`,
-performing Knative service updates, traffic splitting etc.
+This documents the example Pipeline to build the source code with a Dockerfile in
+the git repo and deploy it as Knative Service.
+It uses [buildah task(https://github.com/tektoncd/catalog/tree/master/buildah/README.md) for building the source code and
+[kn task](https://github.com/tektoncd/catalog/blob/master/kn/README.md) to create or update a Knative Service.
 
 ## Prerequisites:
-1. OpenShift / Kubernetes cluster
-2. `oc` CLI binary, grab latest from [here](https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/)
-3. Tekton pipelines release v0.8.0
+
+1. Latest Tekton Pipelines [install](https://github.com/tektoncd/pipeline/blob/master/docs/install.md)ed.
+2. `kubectl` CLI [install](https://kubernetes.io/docs/tasks/tools/install-kubectl/)ed.
+3. `tkn` CLI [install](https://github.com/tektoncd/cli#installing-tkn)ed.
+4. User account exists at a container registry (e.g. [quay.io](https://quay.io))
+5. A ServiceAccount to enable access to perform the required operations in the Pipeline,
+   we'll configure one in following section.
+
+### One time setup:
+
+1 - Create a sample namespace `tkn-kn`, we'll reference this namespace in the subsequent operations.
 ```bash
-oc apply -f https://github.com/tektoncd/pipeline/releases/download/v0.8.0/release.yaml
-```
-4. tkn CLI, [install](https://github.com/tektoncd/cli#installing-tkn)
-5. User account exists at a container registry for example: [quay.io](https://quay.io) or [docker.io](https://hub.docker.com/)
-
-## Operations:
-
-We'll create a tekton pipeline which performs following operations:
-
-1. Create a container image from your git source
-2. Push the container image to a configured container registry
-3. Create a Knative Service from container created
-
-We'll also configure a service account with
-1. Privileged security context for buildah task to build container images
-2. ClusterRole for CRUD operations on Knative resources
-3. Linked container registry `secrets` to be able to push images to registry
-4. Linked `imagePullSecrets` to pull images to from registry
-
-
-## One time setup:
-1. Lets create a sample project `tkn-kn`, we'll reference this project/namespace in our upcoming operations.
-```bash
-oc new-project tkn-kn
+kubectl create namespace tkn-kn
 ```
 
-2. Create `docker-regitry` secrets for pushing built images to registry for example: quay.io or docker.io
+2 - Create a `docker-registry` type secrets for pushing/pulling the built container images.
 ```bash
-oc create secret docker-registry container-registry --docker-server=<DOCKER-REGISTRY> --docker-username=<USERNAME> --docker-password=<PASSWORD> --docker-email=<EMAIL>
+kubectl create secret docker-registry container-registry --docker-server=<DOCKER-REGISTRY> --docker-username=<USERNAME> --docker-password=<PASSWORD> --docker-email=<EMAIL>
 ```
+#### Note:
+- If you are using `docker.io`: Push to (a new private repo at) `docker.io` via buildah and pull via `imagePullSecrets` does not work!
+  Please [create a new](https://hub.docker.com/repository/create) empty public repository for this tutorial and refer it in subsequent steps.
+- If you are using `quay.io`: Push to `quay.io` via buildah and pull via `imagePullSecrets` works well. [Get](https://quay.io/signin/) an account created at quay.
 
-### Note:
-- If you are using `docker.io`: Push to (a new private repo at) `docker.io` via buildah and pull via `imagePullSecrets` **does not** work!
-  Please [create a new](https://hub.docker.com/repository/create) empty **public** repository for this tutorial and refer it in subsequent steps.
-- If you are using `quay.io`: Push to (a private repo at) `quay.io` via buildah and pull via `imagePullSecrets` **works well**. [Get](https://quay.io/signin/) your account created at quay.
-
-
-3. Create Service Account `kn-deployer-account` and
+3. Create a ServiceAccount `kn-deployer-account` and
  - link `container-registry` secret created above in step 2
- - create cluster role `kn-deployer` to access to Knative resources
- - binds the service account with cluster role `kn-deployer` in namespace `tkn-kn`
-
-Save following YAML in for e.g. `kn_deployer.yaml` and update if required.
+ - create cluster role `kn-deployer` to access the Knative resources
+ - binds the ServiceAccount with cluster role `kn-deployer` in namespace `tkn-kn`
+ - Save following YAML in e.g. `kn_deployer.yaml` and apply using `kubectl apply -f kn_deployer.yaml`.
 
 ```yaml
 # Define a ServiceAccount named kn-deployer-account that has permission to
@@ -60,14 +44,13 @@ kind: ServiceAccount
 metadata:
   name: kn-deployer-account
   namespace: tkn-kn
-# Link your container registry secrets
+# Link the container registry secrets
 secrets:
   - name: container-registry
 # To be able to pull the (private) image from the container registry
 imagePullSecrets:
   - name: container-registry
 ---
-
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -76,9 +59,7 @@ rules:
   - apiGroups: ["serving.knative.dev"]
     resources: ["services"]
     verbs: ["get", "list", "create", "update", "delete", "patch", "watch"]
-
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
@@ -93,29 +74,24 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ```
 
-Apply the config we created
-
+  - If you've used the same names for namespace and secrets as mentioned above, you can configure the ServiceAccount with YAML file in this repo using:
 ```bash
-oc apply -f kn_deployer.yaml
+kubectl create -f https://raw.githubusercontent.com/tektoncd/catalog/master/kn/knative-dockerfile-deploy/kn_deployer.yaml
 ```
 
-4. To be able to build containers using buildah, we'll need to add privileged security context and `edit` role to our service account
+4. Install buildah task from tektoncd/atalog
 ```bash
-oc adm policy add-scc-to-user privileged -z kn-deployer-account
-oc adm policy add-role-to-user edit -z kn-deployer-account
+kubectl apply -f https://raw.githubusercontent.com/tektoncd/catalog/master/buildah/buildah.yaml
 ```
 
-5. Install buildah task from catalog
+5. Install the kn task from the tektoncd/atalog
 ```bash
-oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/master/buildah/buildah.yaml
-```
-
-6. Install the kn task from catalog
-```bash
-oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/master/kn/kn.yaml
+kubectl apply -f https://raw.githubusercontent.com/tektoncd/catalog/master/kn/kn.yaml
 ```
 
 ## Piplines:
-1. Create image from git source and create Knative Service using built container [pipeline](./build_deploy/README.md)
-2. Deploy new revision to your Knative Service [pipeline](./service_update/README.md)
-3. Perform traffic splitting operations on your Knative Service [pipeline](./traffic_splitting/README.md)
+
+Let's create some Pipelines using `buildah` and `kn` tasks:
+1. Create an image from git source and deploy to the Knative Service [pipeline](./build_deploy/README.md)
+2. Deploy a new Revision to the Knative Service [pipeline](./service_update/README.md)
+3. Perform traffic operations on the Knative Service [pipeline](./service_traffic/README.md)

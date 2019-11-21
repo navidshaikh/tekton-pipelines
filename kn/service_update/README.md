@@ -1,10 +1,11 @@
 # Deploy new revision to a Knative Service
 
-Lets deploy a new revision to a Knative Service, the update may contain
-configuration update for the service for e.g. container image, environment
-variables, etc.
+Let's create a Pipeline which deploys a new Revision to the deployed Knative Service.
+A new Revision is created if you update the Configuration of the Service.
 
 ## Pipeline:
+- The following Pipeline is generic `kn` Pipeline, which can update (or even create a new) Knative Service based to the parameters you provide.
+- Save the following YAML in a file say e.g.: `kn_service_update_pipeline.yaml` and create using `kubectl create -f kn_service_update_pipeline.yaml`.
 
 ```yaml
 apiVersion: tekton.dev/v1alpha1
@@ -37,17 +38,17 @@ spec:
         - "$(params.ARGS)"
 ```
 
-Save the above YAML in for e.g. `kn_service_update_pipeline.yaml` and
-update if required or you can create above pipeline as is using
-
+ - You can also create this Pipeline using the YAML file present in this repo using 
 ```
-oc create -f https://raw.githubusercontent.com/navidshaikh/tekton-pipelines/master/kn/service_update/kn_service_update_pipeline.yaml
+kubectl create -f https://raw.githubusercontent.com/tektoncd/catalog/master/kn/knative-dockerfile-deploy/service_update/kn_service_update_pipeline.yaml
 ```
 
 ## PipelineResource
 
-Let's create pipeline resource to input to our pipline. Create this
-pipeline resource if you'd like to deploy a new image to your service
+- If you wan't to deploy a new image to a Revision, let's create a PieplineResource for this Pipeline.
+- Note that in the below example, we're now referencing a different image,
+other than the one we created earlier using buildah.
+- Save the following YAML in a file say e.g.: `resources.yaml` and create using `kubectl create -f resources.yaml`.
 
 ```yaml
 apiVersion: tekton.dev/v1alpha1
@@ -60,16 +61,17 @@ spec:
     - name: url
       value: "gcr.io/knative-samples/helloworld-go"
 ```
-
-Save the above YAML in for e.g. `resources.yaml` and update values for
-image URL if required and create the resource
-
-```bash
-oc create -f resources.yaml
+- You can use this PipelineResource using the YAML file present in this repo using 
+```
+kubectl create -f https://raw.githubusercontent.com/tektoncd/catalog/master/kn/knative-dockerfile-deploy/service_update/resources.yaml
 ```
 
-3. Create the pipeline run to trigger our pipeline and input the kn CLI
-parameters to pass to deploy a new revision to our service
+## PipelineRun
+
+- Create the PipelineRun to trigger the Pipeline and input the kn CLI
+parameters to deploy a new Revision to `hello` Service
+
+- Save the following YAML in a file e.g.: `pipeline_run.yaml` and create using `kubectl create -f pipeline_run.yaml`
 
 ```yaml
 apiVersion: tekton.dev/v1alpha1
@@ -96,19 +98,22 @@ spec:
         - "--service-account=kn-deployer-account"
 ```
 
-Save the above YAML in for e.g. `pipeline_run.yaml` and create it
-
-```bash
-oc create -f pipeline_run.yaml
+- You can also create this PipelineRun using the YAML file present in this repo using
+```
+kubectl create -f https://raw.githubusercontent.com/tektoncd/catalog/master/kn/knative-dockerfile-deploy/service_update/pipeline_run.yaml
 ```
 
-Lets monitor the logs of our pipeline run using `tkn`
+Let's monitor the logs of the Pipeline run using `tkn`
 ```bash
 tkn pr list
 tkn pr logs <pipelinerun-name> logs -f
 ```
 
-After the successful run of the pipeline, we should have the Knative Service cr
+After the successful run of the Pipeline, we should have the Service updated, let's check
 ```bash
-oc get ksvc
+kubectl get ksvc hello
 ```
+
+## What's Next:
+- We've updated the Knative Service and now we've two Revisions present, we can use this state to also perform
+  some traffic splitting operation on the Service, check out the [next Pipeline example](../service_traffic/README.md).

@@ -1,21 +1,15 @@
-# Buildah build and kn service create Pipeline
+# Build and Deploy Pipeline
 
-Lets create a container image from your git source having a Dockerfile and
-deploy the built container to a Knative Service. In this guide, we'll create
-
-- A pipeline for buildah build and kn service create
-- Pipeline resources for git source and resulting container image repository
-- A pipeline run to tie above together and trigger the pipeline
+Let's create a container image from a git source having a Dockerfile and deploy it to a Knative Service.
+This Pipeline builds and push the git source using `buildah` and deploys the container as Knative Service using `kn`.
 
 ## Pipline:
 
-We'll create a tekton pipeline which performs following operations:
-
-1. Create a container image from your git source having a Dockerfile
-2. Push the container image to a configured registry
-3. Create a Knative Service from built container
-
-Lets create a pipeline for git source build and service creation
+The following Pipeline definition refers:
+ - `buildah` and `kn` tasks (we've installed these tasks in One time Setup section)
+- Pipeline resources for git and resulting container image repository
+- Save the following YAML in a file e.g.: `build_deploy_pipeline.yaml` and create the Pipeline using
+  `kubectl create -f build_deploy_pipeline.yaml`
 
 ```yaml
 apiVersion: tekton.dev/v1alpha1
@@ -64,19 +58,21 @@ spec:
         - "$(params.ARGS)"
 ```
 
-Save the above YAML in for e.g. `build_deploy_pipeline.yaml` and update
-names if required or you can use above pipeline as is using
+ - You can also create this Pipeline using the YAML file present in this repo using
 ```
-oc create -f https://raw.githubusercontent.com/navidshaikh/tekton-pipelines/master/kn/build_deploy/build_deploy_pipeline.yaml
+kubectl create -f https://raw.githubusercontent.com/tektoncd/catalog/master/kn/knative-dockerfile-deploy/build_deploy/build_deploy_pipeline.yaml
 ```
-
 ## PipelineResource
 
-Let's create pipeline resource to input to our pipeline.
-As we see above, there are a couple of resources referenced in pipeline,
-we'll need to create these resources to make available during pipeline run.
-Make sure your git repository has a Dockerfile at root of the repo.
-Make sure the container repository URL is correct and you have push access to.
+Let's create Pipeline resources that we've referenced in the above Pipeline.
+
+### Note:
+ - Make sure the git repository has a Dockerfile at root of the repo.
+ - Make sure the container repository URL is correct and you have push access to.
+ - If you are using docker.io container registry, please [create a new](https://hub.docker.com/repository/create) empty repository in advance.
+
+Save the following YAML for Pipeline resources in a file e.g.: `resources.yaml` and make sure to update the values for the git and container repositories.
+Create the resource as `kubectl create -f resources.yaml`.
 
 ```yaml
 apiVersion: tekton.dev/v1alpha1
@@ -100,17 +96,16 @@ spec:
       value: "quay.io/navidshaikh/helloworld-go"
 ```
 
-Save the above YAML in for e.g. `resources.yaml` and update values for your git repo and container repository to
-push built image to and create the resources
+## PipelineRun:
 
-```bash
-oc create -f resources.yaml
-```
+- Let's trigger the Pipeline we've created above referncing the resources via PipelineRun.
+- Note that we've referenced ServiceAccount `kn-deployer-account` in `kn` CLI arguments,
+  it tells `kn` which ServiceAccount to use while pulling the image from (private) container registry.
+- Also note that, we're giving creating service namely `hello` and asking to create Revision
+  `hello-v1`, we'll use this Revision name in subsequent Pipeline operations.
 
-3. Create the pipeline run to trigger our pipeline, pipeline run references the pipline resouces created above and
-mentions the parameters required to run our pipeline and perform the task.
-Also note that we referenced the service account `kn-deployer-account` while creating the service via kn task,
-this is to be able to pull the container image from private repo via `imagePullSecrets` linked to mentioned service account.
+Save the following YAML in a file e.g.: `pipeline_run.yaml` and create PipelineRun as
+`kubectl create -f pipeline_run.yaml`.
 
 ```yaml
 apiVersion: tekton.dev/v1alpha1
@@ -140,20 +135,24 @@ spec:
         - "--service-account=kn-deployer-account"
 ```
 
-Save the above YAML in for e.g. `pipeline_run.yaml` and update parameters value if required and
-create the pipelien run
-
-```bash
-oc create -f pipeline_run.yaml
+ - You can also create this PipelineRun using the YAML file present in this repo using
+```
+kubectl create -f https://raw.githubusercontent.com/tektoncd/catalog/master/kn/knative-dockerfile-deploy/build_deploy/pipeline_run.yaml
 ```
 
-Lets monitor the logs of our pipeline run using `tkn`
+- We can monitor the logs of this PipelineRun using `tkn` CLI
 ```bash
 tkn pr list
 tkn pr logs <pipelinerun-name> logs -f
 ```
 
-After the successful run of the pipeline, we should have the Knative Service created
+- After the successful PipelineRun, we should have the source built, pushed to the repo and deployed as Knative Service. Let's check it:
+
 ```bash
-oc get ksvc
+kubectl get ksvc hello
 ```
+
+## What's Next:
+- We've built a container image from git source, pushed it to a container registry, deployed a Knative Service using the image.
+- You can use other available `kn` options to configure the Service, just add them to `params.ARGS` field in above `pipeline_run.yaml`. Check the list of supported options in `kn` [here](https://github.com/knative/client/blob/master/docs/cmd/kn.md).
+- We've further pipeline examples showing [service update](../service_update/README.md) and [service traffic](../service_traffic/README.md) operations.
