@@ -2,7 +2,7 @@
 
 This documents the example Pipeline to build the source code with a Dockerfile in
 the git repo and deploy it as Knative Service.
-It uses [buildah task(https://github.com/tektoncd/catalog/tree/master/buildah/README.md) for building the source code and
+It uses [buildah task](https://github.com/tektoncd/catalog/tree/master/buildah/README.md) for building the source code and
 [kn task](https://github.com/tektoncd/catalog/blob/master/kn/README.md) to create or update a Knative Service.
 
 ## Prerequisites:
